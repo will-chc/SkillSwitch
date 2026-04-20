@@ -84,11 +84,10 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
+      sandbox: false,
     },
   });
 
-  // Dev mode: load from Vite dev server
-  // Prod mode: load built files
   const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 
   if (isDev) {

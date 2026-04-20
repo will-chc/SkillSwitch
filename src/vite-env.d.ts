@@ -13,10 +13,6 @@ interface ElectronAPI {
   toggleSkill: (skillId: string, enabled: boolean) => Promise<{ success: boolean; error?: string }>;
 }
 
-declare global {
-  interface Window {
-    electronAPI: ElectronAPI;
-  }
+interface Window {
+  electronAPI: ElectronAPI;
 }
-
-export {};

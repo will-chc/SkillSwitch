@@ -14,6 +14,12 @@ function App() {
   const [error, setError] = useState<string | null>(null);
 
   const loadSkills = async () => {
+    if (!window.electronAPI) {
+      setError('Not running in Electron. Please launch the app with "npm run electron:dev"');
+      setLoading(false);
+      return;
+    }
+
     try {
       const result = await window.electronAPI.scanSkills();
       if (result.error) {
@@ -23,7 +29,7 @@ function App() {
         setError(null);
       }
     } catch (err) {
-      setError('Failed to load skills. Make sure the app is running in Electron.');
+      setError('Failed to load skills.');
     } finally {
       setLoading(false);
     }
@@ -34,6 +40,11 @@ function App() {
   }, []);
 
   const handleToggle = async (skillId: string, currentEnabled: boolean) => {
+    if (!window.electronAPI) {
+      alert('Electron API not available');
+      return;
+    }
+
     const newEnabled = !currentEnabled;
 
     // Optimistic update
