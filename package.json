@@ -1,0 +1,55 @@
+{
+  "name": "skill-switch",
+  "version": "0.0.1",
+  "description": "Visual skill manager for AI agents. Toggle skills on/off with a switch.",
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
+    "electron:build": "tsc && vite build && electron-builder",
+    "electron:start": "electron ."
+  },
+  "keywords": [
+    "claude-code",
+    "ai-agents",
+    "skill-manager",
+    "electron",
+    "productivity"
+  ],
+  "author": "will-chc",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "concurrently": "^8.2.2",
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3",
+    "typescript": "^5.2.2",
+    "vite": "^5.3.1",
+    "wait-on": "^7.2.0"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "build": {
+    "appId": "com.will-chc.skill-switch",
+    "productName": "SkillSwitch",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "mac": {
+      "target": "dmg",
+      "category": "public.app-category.developer-tools"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
+  }
+}
