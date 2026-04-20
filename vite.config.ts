@@ -8,4 +8,6 @@ export default defineConfig({
     outDir: 'dist',
     emptyOutDir: true,
   },
+  // Prevent Vite from trying to bundle electron/
+  buildExclude: ['electron/'],
 })

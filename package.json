@@ -38,6 +38,10 @@
   "build": {
     "appId": "com.will-chc.skill-switch",
     "productName": "SkillSwitch",
+    "files": [
+      "dist/**/*",
+      "electron/**/*"
+    ],
     "directories": {
       "output": "dist-electron"
     },
