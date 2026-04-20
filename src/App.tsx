@@ -66,7 +66,7 @@ function App() {
   if (loading) {
     return (
       <div className="container">
-        <div className="loading">Loading skills...</div>
+        <div className="loading">Loading skills</div>
       </div>
     );
   }
@@ -80,7 +80,8 @@ function App() {
 
       {error && (
         <div className="error-banner">
-          ⚠️ {error}
+          <span>⚠️</span>
+          <span>{error}</span>
         </div>
       )}
 
@@ -105,8 +106,16 @@ function App() {
             <p className="empty-hint">Skills should be in ~/.claude/skills/</p>
           </div>
         ) : (
-          skills.map(skill => (
-            <div key={skill.id} className={`skill-card ${!skill.isEnabled ? 'disabled' : ''}`}>
+          skills.map((skill, index) => (
+            <div
+              key={skill.id}
+              className={`skill-card ${!skill.isEnabled ? 'disabled' : ''}`}
+              style={{
+                animation: `fadeSlideIn 0.5s ease forwards`,
+                animationDelay: `${index * 0.08}s`,
+                opacity: 0,
+              }}
+            >
               <div className="skill-info">
                 <h3 className="skill-name">{skill.name}</h3>
                 <p className="skill-id">{skill.id}</p>
@@ -126,6 +135,19 @@ function App() {
           ))
         )}
       </div>
+
+      <style>{`
+        @keyframes fadeSlideIn {
+          from {
+            opacity: 0;
+            transform: translateY(12px) translateX(-8px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) translateX(0);
+          }
+        }
+      `}</style>
     </div>
   );
 }
