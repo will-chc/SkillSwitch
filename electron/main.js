@@ -21,25 +21,27 @@ function findPluginSkillDirs() {
     return pluginDirs;
   }
 
-  // Scan plugin cache for skills directories
-  try {
-    const pluginEntries = fs.readdirSync(pluginsCacheDir, { withFileTypes: true });
-    for (const pluginEntry of pluginEntries.filter(e => e.isDirectory())) {
-      const pluginPath = path.join(pluginsCacheDir, pluginEntry.name);
-      // Look for skills in plugin subdirectories
-      const pluginSubEntries = fs.readdirSync(pluginPath, { withFileTypes: true });
-      for (const subEntry of pluginSubEntries.filter(e => e.isDirectory())) {
-        const skillsPath = path.join(pluginPath, subEntry.name, 'skills');
-        if (fs.existsSync(skillsPath)) {
-          const stats = fs.statSync(skillsPath);
-          if (stats.isDirectory()) {
-            pluginDirs.push({ path: skillsPath, isPluginLocked: true });
-          }
+  // Recursively find all 'skills' directories
+  function findSkillsDirs(dir) {
+    const results = [];
+    try {
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        if (entry.name === 'skills' && entry.isDirectory()) {
+          results.push(path.join(dir, 'skills'));
+        } else if (entry.isDirectory() && !entry.name.startsWith('.')) {
+          results.push(...findSkillsDirs(path.join(dir, entry.name)));
         }
       }
+    } catch (e) {
+      // Ignore inaccessible directories
     }
-  } catch (e) {
-    console.error('Error scanning plugin directories:', e);
+    return results;
+  }
+
+  const skillsDirs = findSkillsDirs(pluginsCacheDir);
+  for (const skillsDir of skillsDirs) {
+    pluginDirs.push({ path: skillsDir, isPluginLocked: true });
   }
 
   return pluginDirs;
