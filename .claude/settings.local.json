@@ -24,7 +24,13 @@
       "Read(//Users/a4399/.agents/skills/search/**)",
       "Read(//Users/a4399/.claude/plugins/cache/mempalace/mempalace/**)",
       "Read(//Users/a4399/.claude/**)",
-      "Bash(node *)"
+      "Bash(node *)",
+      "Bash(pkill -f \"electron .\")",
+      "Bash(curl -s http://localhost:8800)",
+      "Bash(pkill -f \"electron.*skill-Switcher\")",
+      "Bash(curl -s http://localhost:8804)",
+      "Bash(pkill -f \"vite.*skill-Switcher\")",
+      "Bash(curl -s http://localhost:8806)"
     ]
   }
 }
