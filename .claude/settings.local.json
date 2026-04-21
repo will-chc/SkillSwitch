@@ -19,7 +19,9 @@
       "Bash(pkill -f \"vite\")",
       "Bash(curl -s http://localhost:5173/)",
       "Bash(git commit *)",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Read(//Users/a4399/.agents/skills/find-skills/**)",
+      "Read(//Users/a4399/.agents/skills/search/**)"
     ]
   }
 }

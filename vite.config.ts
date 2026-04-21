@@ -5,6 +5,9 @@ import path from 'path'
 export default defineConfig({
   plugins: [react()],
   base: './',
+  server: {
+    port: 8800,
+  },
   build: {
     outDir: 'dist',
     emptyOutDir: true,
