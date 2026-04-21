@@ -7,6 +7,7 @@ interface Skill {
   description: string;
   isEnabled: boolean;
   isPluginLocked?: boolean;
+  source?: string;
 }
 
 function App() {
@@ -130,6 +131,9 @@ function App() {
                     <span className="lock-badge" title="Locked by plugin">
                       🔒
                     </span>
+                  )}
+                  {skill.source && (
+                    <span className="source-badge">{skill.source}</span>
                   )}
                 </div>
                 <p className="skill-id">{skill.id}</p>

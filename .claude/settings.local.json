@@ -21,7 +21,9 @@
       "Bash(git commit *)",
       "Bash(node -e ' *)",
       "Read(//Users/a4399/.agents/skills/find-skills/**)",
-      "Read(//Users/a4399/.agents/skills/search/**)"
+      "Read(//Users/a4399/.agents/skills/search/**)",
+      "Read(//Users/a4399/.claude/plugins/cache/mempalace/mempalace/**)",
+      "Read(//Users/a4399/.claude/**)"
     ]
   }
 }
