@@ -6,6 +6,7 @@ interface Skill {
   name: string;
   description: string;
   isEnabled: boolean;
+  isPluginLocked?: boolean;
 }
 
 function App() {
@@ -59,7 +60,13 @@ function App() {
       setSkills(prev =>
         prev.map(s => (s.id === skillId ? { ...s, isEnabled: currentEnabled } : s))
       );
-      alert(`Failed to toggle skill: ${result.error}`);
+      // Show toast for plugin-locked skills
+      if (result.error?.includes('locked')) {
+        // Plugin-locked skill - just show a subtle message
+        console.log('Skill is managed by a plugin and cannot be toggled manually');
+      } else {
+        alert(`Failed to toggle skill: ${result.error}`);
+      }
     }
   };
 
@@ -109,7 +116,7 @@ function App() {
           skills.map((skill, index) => (
             <div
               key={skill.id}
-              className={`skill-card ${!skill.isEnabled ? 'disabled' : ''}`}
+              className={`skill-card ${!skill.isEnabled ? 'disabled' : ''} ${skill.isPluginLocked ? 'plugin-locked' : ''}`}
               style={{
                 animation: `fadeSlideIn 0.5s ease forwards`,
                 animationDelay: `${index * 0.08}s`,
@@ -117,7 +124,14 @@ function App() {
               }}
             >
               <div className="skill-info">
-                <h3 className="skill-name">{skill.name}</h3>
+                <div className="skill-name-row">
+                  <h3 className="skill-name">{skill.name}</h3>
+                  {skill.isPluginLocked && (
+                    <span className="lock-badge" title="Locked by plugin">
+                      🔒
+                    </span>
+                  )}
+                </div>
                 <p className="skill-id">{skill.id}</p>
                 {skill.description && (
                   <p className="skill-description">{skill.description}</p>
@@ -128,6 +142,7 @@ function App() {
                   type="checkbox"
                   checked={skill.isEnabled}
                   onChange={() => handleToggle(skill.id, skill.isEnabled)}
+                  disabled={skill.isPluginLocked}
                 />
                 <span className="slider"></span>
               </label>

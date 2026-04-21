@@ -38,20 +38,27 @@ function scanSkills() {
         // Try to read skill.json for metadata
         let skillInfo = { name: baseName, description: '' };
         const skillJsonPath = path.join(skillPath, 'skill.json');
+        let hasSkillJson = false;
         if (fs.existsSync(skillJsonPath)) {
           try {
             const content = fs.readFileSync(skillJsonPath, 'utf-8');
             skillInfo = JSON.parse(content);
+            hasSkillJson = true;
           } catch (e) {
             // Ignore parse errors
           }
         }
+
+        // Determine if this is a plugin-locked skill
+        // Plugin-locked skills typically don't have skill.json or are in special locations
+        const isPluginLocked = !hasSkillJson;
 
         return {
           id: entry.name,
           name: skillInfo.name || baseName,
           description: skillInfo.description || '',
           isEnabled,
+          isPluginLocked,
           path: skillPath,
         };
       });
@@ -65,6 +72,13 @@ function scanSkills() {
 // Toggle skill enable/disable
 function toggleSkill(skillId, enabled) {
   try {
+    // Check if skill is plugin-locked
+    const skillPath = path.join(CLAUDE_SKILLS_DIR, skillId);
+    const skillJsonPath = path.join(skillPath, 'skill.json');
+    if (!fs.existsSync(skillJsonPath)) {
+      return { success: false, error: 'Skill is locked by plugin' };
+    }
+
     const oldPath = path.join(CLAUDE_SKILLS_DIR, skillId);
     const baseName = skillId.replace('.disabled', '');
     const newId = enabled ? baseName : `${baseName}.disabled`;
