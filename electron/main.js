@@ -3,13 +3,14 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 
+// Settings file path
+const SETTINGS_FILE = path.join(os.homedir(), '.claude', 'settings.json');
+
 // Skill directories to scan
 const SKILL_DIRECTORIES = [
-  // User skills (can be toggled)
-  { path: path.join(os.homedir(), '.claude', 'skills'), isPluginLocked: false },
-  // Plugin skills (locked)
-  { path: path.join(os.homedir(), '.codex', 'superpowers', 'skills'), isPluginLocked: true },
-  { path: path.join(os.homedir(), '.codex', 'skills'), isPluginLocked: true },
+  { path: path.join(os.homedir(), '.claude', 'skills') },
+  { path: path.join(os.homedir(), '.codex', 'superpowers', 'skills') },
+  { path: path.join(os.homedir(), '.codex', 'skills') },
 ];
 
 // Find plugin skill directories dynamically
@@ -21,7 +22,6 @@ function findPluginSkillDirs() {
     return pluginDirs;
   }
 
-  // Recursively find all 'skills' directories
   function findSkillsDirs(dir) {
     const results = [];
     try {
@@ -41,33 +41,65 @@ function findPluginSkillDirs() {
 
   const skillsDirs = findSkillsDirs(pluginsCacheDir);
   for (const skillsDir of skillsDirs) {
-    pluginDirs.push({ path: skillsDir, isPluginLocked: true });
+    pluginDirs.push(skillsDir);
   }
 
   return pluginDirs;
+}
+
+// Get disabled skills from settings.json
+function getDisabledSkills() {
+  try {
+    if (!fs.existsSync(SETTINGS_FILE)) {
+      return [];
+    }
+    const content = fs.readFileSync(SETTINGS_FILE, 'utf-8');
+    const settings = JSON.parse(content);
+    return Array.isArray(settings.disabledSkills) ? settings.disabledSkills : [];
+  } catch (e) {
+    console.error('Error reading settings.json:', e);
+    return [];
+  }
+}
+
+// Save disabled skills to settings.json
+function saveDisabledSkills(disabledSkills) {
+  try {
+    let settings = {};
+    if (fs.existsSync(SETTINGS_FILE)) {
+      const content = fs.readFileSync(SETTINGS_FILE, 'utf-8');
+      settings = JSON.parse(content);
+    }
+    settings.disabledSkills = disabledSkills;
+    fs.writeFileSync(SETTINGS_FILE, JSON.stringify(settings, null, 2), 'utf-8');
+    return { success: true };
+  } catch (e) {
+    console.error('Error writing settings.json:', e);
+    return { success: false, error: e.message };
+  }
 }
 
 // Scan skills from all directories
 function scanSkills() {
   try {
     const allSkillDirs = [...SKILL_DIRECTORIES, ...findPluginSkillDirs()];
-    const skillsMap = new Map(); // Use Map to avoid duplicates
+    const skillsMap = new Map();
+    const disabledSkills = getDisabledSkills();
 
-    for (const dirConfig of allSkillDirs) {
-      if (!fs.existsSync(dirConfig.path)) {
+    for (const skillDir of allSkillDirs) {
+      if (!fs.existsSync(skillDir)) {
         continue;
       }
 
-      const entries = fs.readdirSync(dirConfig.path, { withFileTypes: true });
+      const entries = fs.readdirSync(skillDir, { withFileTypes: true });
       for (const entry of entries) {
-        // Skip hidden files and non-directories
         if (entry.name.startsWith('.')) continue;
 
         let isSkillDir = false;
         if (entry.isDirectory()) {
           isSkillDir = true;
         } else if (entry.isSymbolicLink()) {
-          const skillPath = path.join(dirConfig.path, entry.name);
+          const skillPath = path.join(skillDir, entry.name);
           try {
             const stats = fs.statSync(skillPath);
             isSkillDir = stats.isDirectory();
@@ -78,8 +110,7 @@ function scanSkills() {
 
         if (!isSkillDir) continue;
 
-        const skillPath = path.join(dirConfig.path, entry.name);
-        const isEnabled = !entry.name.endsWith('.disabled');
+        const skillPath = path.join(skillDir, entry.name);
         const baseName = entry.name.replace('.disabled', '');
 
         // Try to read skill.json for metadata
@@ -94,24 +125,17 @@ function scanSkills() {
           }
         }
 
-        // Determine if skill is plugin-locked
-        // User skills in ~/.claude/skills/ without symlinks are NOT locked
-        // Symlinked skills or skills from plugin directories ARE locked
-        const isUserSkillsDir = dirConfig.path === path.join(os.homedir(), '.claude', 'skills');
-        const isSymlink = entry.isSymbolicLink();
-        const isPluginLocked = dirConfig.isPluginLocked || (isUserSkillsDir && isSymlink);
-
         // Use skill name as key to avoid duplicates
         const skillKey = skillInfo.name || baseName;
         if (!skillsMap.has(skillKey)) {
+          // Check if disabled via settings.json
+          const isEnabled = !disabledSkills.includes(skillKey);
+
           skillsMap.set(skillKey, {
             id: entry.name,
             name: skillInfo.name || baseName,
             description: skillInfo.description || '',
             isEnabled,
-            isPluginLocked,
-            path: skillPath,
-            source: isUserSkillsDir ? 'user' : 'plugin',
           });
         }
       }
@@ -123,35 +147,24 @@ function scanSkills() {
   }
 }
 
-// Toggle skill enable/disable (only for user skills)
-function toggleSkill(skillId, enabled) {
-  const CLAUDE_SKILLS_DIR = path.join(os.homedir(), '.claude', 'skills');
-
+// Toggle skill enable/disable via settings.json
+function toggleSkill(skillName, enabled) {
   try {
-    const skillPath = path.join(CLAUDE_SKILLS_DIR, skillId);
+    const disabledSkills = getDisabledSkills();
 
-    // Check if skill exists
-    if (!fs.existsSync(skillPath)) {
-      return { success: false, error: 'Skill not found' };
-    }
-
-    // Check if it's a symlink (plugin-locked)
-    const linkPath = path.join(CLAUDE_SKILLS_DIR, skillId);
-    try {
-      const lstats = fs.lstatSync(linkPath);
-      if (lstats.isSymbolicLink()) {
-        return { success: false, error: 'Skill is locked by plugin' };
+    if (enabled) {
+      // Enable: remove from disabled list
+      const newDisabled = disabledSkills.filter(s => s !== skillName);
+      const result = saveDisabledSkills(newDisabled);
+      return result;
+    } else {
+      // Disable: add to disabled list (avoid duplicates)
+      if (!disabledSkills.includes(skillName)) {
+        const newDisabled = [...disabledSkills, skillName];
+        return saveDisabledSkills(newDisabled);
       }
-    } catch (e) {
-      // Ignore
+      return { success: true };
     }
-
-    const baseName = skillId.replace('.disabled', '');
-    const newId = enabled ? baseName : `${baseName}.disabled`;
-    const newPath = path.join(CLAUDE_SKILLS_DIR, newId);
-
-    fs.renameSync(skillPath, newPath);
-    return { success: true };
   } catch (error) {
     return { success: false, error: error.message };
   }

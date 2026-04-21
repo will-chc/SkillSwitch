@@ -6,8 +6,6 @@ interface Skill {
   name: string;
   description: string;
   isEnabled: boolean;
-  isPluginLocked?: boolean;
-  source?: string;
 }
 
 function App() {
@@ -61,13 +59,7 @@ function App() {
       setSkills(prev =>
         prev.map(s => (s.id === skillId ? { ...s, isEnabled: currentEnabled } : s))
       );
-      // Show toast for plugin-locked skills
-      if (result.error?.includes('locked')) {
-        // Plugin-locked skill - just show a subtle message
-        console.log('Skill is managed by a plugin and cannot be toggled manually');
-      } else {
-        alert(`Failed to toggle skill: ${result.error}`);
-      }
+      alert(`Failed to toggle skill: ${result.error}`);
     }
   };
 
@@ -117,7 +109,7 @@ function App() {
           skills.map((skill, index) => (
             <div
               key={skill.id}
-              className={`skill-card ${!skill.isEnabled ? 'disabled' : ''} ${skill.isPluginLocked ? 'plugin-locked' : ''}`}
+              className={`skill-card ${!skill.isEnabled ? 'disabled' : ''}`}
               style={{
                 animation: `fadeSlideIn 0.5s ease forwards`,
                 animationDelay: `${index * 0.08}s`,
@@ -125,17 +117,7 @@ function App() {
               }}
             >
               <div className="skill-info">
-                <div className="skill-name-row">
-                  <h3 className="skill-name">{skill.name}</h3>
-                  {skill.isPluginLocked && (
-                    <span className="lock-badge" title="Locked by plugin">
-                      🔒
-                    </span>
-                  )}
-                  {skill.source && (
-                    <span className="source-badge">{skill.source}</span>
-                  )}
-                </div>
+                <h3 className="skill-name">{skill.name}</h3>
                 <p className="skill-id">{skill.id}</p>
                 {skill.description && (
                   <p className="skill-description">{skill.description}</p>
@@ -146,7 +128,6 @@ function App() {
                   type="checkbox"
                   checked={skill.isEnabled}
                   onChange={() => handleToggle(skill.id, skill.isEnabled)}
-                  disabled={skill.isPluginLocked}
                 />
                 <span className="slider"></span>
               </label>
