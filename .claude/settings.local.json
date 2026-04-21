@@ -18,7 +18,8 @@
       "Bash(pkill -f \"electron\")",
       "Bash(pkill -f \"vite\")",
       "Bash(curl -s http://localhost:5173/)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(node -e ' *)"
     ]
   }
 }

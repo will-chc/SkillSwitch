@@ -15,7 +15,21 @@ function scanSkills() {
 
     const entries = fs.readdirSync(CLAUDE_SKILLS_DIR, { withFileTypes: true });
     const skills = entries
-      .filter(entry => entry.isDirectory())
+      .filter(entry => {
+        // Include both regular directories and symbolic links
+        if (entry.isDirectory()) return true;
+        if (entry.isSymbolicLink()) {
+          // Verify the symlink target exists and is a directory
+          const skillPath = path.join(CLAUDE_SKILLS_DIR, entry.name);
+          try {
+            const stats = fs.statSync(skillPath);
+            return stats.isDirectory();
+          } catch {
+            return false;
+          }
+        }
+        return false;
+      })
       .map(entry => {
         const skillPath = path.join(CLAUDE_SKILLS_DIR, entry.name);
         const isEnabled = !entry.name.endsWith('.disabled');
